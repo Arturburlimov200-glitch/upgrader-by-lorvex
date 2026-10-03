@@ -96,12 +96,25 @@ nav button.on{background:var(--ac);color:#fff}
 .srch{width:100%;background:var(--s1);color:var(--tx);border:2px solid var(--s2);border-radius:14px;padding:12px 14px;font:inherit;margin-bottom:12px}
 .srch:focus{outline:none;border-color:var(--ac)}
 nav button{font-size:13px;padding:12px 4px}
+.me{display:flex;gap:10px;align-items:center;background:none;font:700 15px Unbounded,system-ui,sans-serif;max-width:55%;padding:0;color:var(--tx)}
+.me b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:hsl(var(--h) 65% 45%);font-size:22px;box-shadow:0 0 0 2px var(--s2)}
+.av img{width:100%;height:100%;object-fit:cover}
+.av.big{width:96px;height:96px;font-size:52px;margin:0 auto 10px}
+.avg{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px}
+.eb{background:var(--s1);border-radius:14px;padding:10px 0;font-size:24px;border:2px solid transparent}
+.eb.sel{border-color:var(--ac);background:var(--s2)}
+.rg{width:100%;accent-color:var(--ac);margin-bottom:20px}
+.art.ph{background:var(--im) center/cover no-repeat}.art.ph:before,.art.ph:after{display:none}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.slot{background:var(--s1);border-radius:14px;padding:6px;font-size:12px;font-weight:800;text-align:center;cursor:pointer}
+.slot .art{height:52px;margin-bottom:4px}.slot span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
-  <header><h1>Апгрейдер</h1><div class="bal" id="bal"><i>◈</i><span id="balv">0</span></div></header>
+  <header><button class="me" id="me" onclick="go('pf')" aria-label="Профиль"></button><div class="bal" id="bal"><i>◈</i><span id="balv">0</span></div></header>
   <main id="main"></main>
 </div>
 <nav id="nav"></nav>
@@ -110,9 +123,9 @@ nav button{font-size:13px;padding:12px 4px}
 window.onerror=function(m,u,l){var e=document.getElementById("main");if(e)e.innerHTML='<div class="empty">Ошибка: '+m+' (строка '+l+')</div>'};
 const SK=[["Неоновый Шторм",50,300],["Пыльная Дюна",120,38],["Ледяной Шёпот",250,195],["Медный Закат",400,20],["Тихий Омут",700,215],["Изумрудный Клык",1100,150],["Ночной Рейс",1800,250],["Багровый Орден",2800,350],["Лунная Пыль",4200,265],["Золотая Лихорадка",6500,45],["Призрак Вулкана",10000,8],["Королевский Кобальт",16000,225],["Абсолютный Ноль",30000,180]].map((a,i)=>({id:i,n:a[0],p:a[1],h:a[2]}));
 const KEY="upgrader-v1",EDGE=.95;
-let st={bal:10000,inv:[],uid:1};
+let st={bal:1000,inv:[],uid:1};
 try{const s=localStorage.getItem(KEY);if(s)st=JSON.parse(s)}catch(e){}
-if(!st||typeof st.bal!=="number"||!Array.isArray(st.inv))st={bal:10000,inv:[],uid:1};st.uid=st.uid||(st.inv.length+1)+100;st.stk=st.stk||[];st.inv=st.inv.filter(i=>i&&i.id<999);st.inv.forEach(i=>i.s=i.s||[]);
+if(!st||typeof st.bal!=="number"||!Array.isArray(st.inv))st={bal:1000,inv:[],uid:1};st.uid=st.uid||(st.inv.length+1)+100;st.stk=st.stk||[];st.pf=st.pf||{n:"Игрок",e:"🦊",c:260,img:""};st.im=st.im||{};st.inv=st.inv.filter(i=>i&&i.id<999);st.inv.forEach(i=>i.s=i.s||[]);
 let tab="up",sel=new Set(),extra=0,target=null,R=0,busy=false,res=null,hint="";
 const fmt=n=>Math.round(n).toLocaleString("ru-RU");
 const rar=p=>p<300?"c0":p<1500?"c1":p<5000?"c2":p<12000?"c3":"c4";
@@ -120,22 +133,22 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),1800)}
 function bump(){const b=document.getElementById("bal");b.classList.add("bump");setTimeout(()=>b.classList.remove("bump"),250)}
 function card(s,o={}){return `<button class="card ${o.sel?"sel":""}" ${o.dis?"disabled":""} ${o.click?`onclick="${o.click}"`:""}>
-<div class="art w${s.t}" style="--h:${s.h}">${o.tag?`<span class="tag">${o.tag}</span>`:""}${s.st&&s.st.length?`<span class="stk">${s.st.map(k=>STK[k].e).join("")}</span>`:""}</div>
+<div ${ia("w"+s.t,s.h,"art w"+s.t)}>${o.tag?`<span class="tag">${o.tag}</span>`:""}${s.st&&s.st.length?`<span class="stk">${s.st.map(k=>STK[k].e).join("")}</span>`:""}</div>
 <div class="nm">${s.n}</div><div class="pr"><i>◈</i> ${fmt(s.p)}</div><div class="rar ${rar(s.p)}"></div>${o.extra||""}</button>`}
 function stakeVal(){let v=extra;sel.forEach(u=>{const it=st.inv.find(i=>i.uid===u);if(it)v+=itemVal(it)});return v}
 function chance(){const s=stakeVal();if(!target&&target!==0||!s)return 0;return Math.min(.9,s/SK[target].p*EDGE)}
-function check(){const s=stakeVal();if(!s)return"Выбери скины или добавь монеты в ставку";if(target===null)return"Выбери скин, который хочешь получить";if(SK[target].p<=s)return"Выбери скин дороже ставки";if(chance()<.01)return"Шанс ниже 1% — увеличь ставку";return""}
+function check(){const s=stakeVal();if(!s)return"Выбери скины или добавь монеты в ставку";if(target===null)return"Выбери скин, который хочешь получить";if(SK[target].p<=s)return"Выбери скин дороже ставки";if(chance()<.0001)return"Шанс ниже 0.01% — увеличь ставку";return""}
 function vUp(){
   const p=chance(),C=2*Math.PI*86,err=check();
   const stakeCards=st.inv.length?`<div class="row">${st.inv.map(i=>card(iv(i),{sel:sel.has(i.uid),click:`tog(${i.uid})`,tag:sel.has(i.uid)?"✓":""})).join("")}</div>`:`<div class="empty">В инвентаре пусто. Купи скин в магазине или сделай ставку монетами.</div>`;
-  const tg=tgList().map(s=>card(s,{sel:target===s.id,click:`pick(${s.id})`,tag:stakeVal()?Math.max(0,Math.min(90,stakeVal()/s.p*EDGE*100)).toFixed(0)+"%":""})).join("");
-  const r=res?`<div class="res ${res.win?"win":"lose"}">${res.win?`<div class="art w${SK[res.id].t}" style="--h:${SK[res.id].h}"></div><div><h3>Победа!</h3><p>${SK[res.id].n} теперь в инвентаре</p></div>`:`<div><h3>Не повезло</h3><p>Ставка сгорела. Попробуй ещё раз — шанс всегда есть.</p></div>`}</div>`:"";
-  return `<div class="wheelBox" id="wb"><svg viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="86"/><circle class="arc" cx="100" cy="100" r="86" transform="rotate(-90 100 100)" stroke-dasharray="${(p*C).toFixed(1)} ${C.toFixed(1)}"/><g class="needle" id="nd" style="transform:rotate(${R}deg)"><path d="M92 2h16l-8 21z"/></g></svg>
-  <div class="mid"><b>${(p*100).toFixed(p>0&&p<.1?1:0)}%</b><span>шанс победы</span></div></div>${r}
+  const tg=tgList().map(s=>card(s,{sel:target===s.id,click:`pick(${s.id})`,tag:stakeVal()?pct(Math.min(.9,stakeVal()/s.p*EDGE)):""})).join("");
+  const r=res?`<div class="res ${res.win?"win":"lose"}">${res.win?`<div ${ia("w"+SK[res.id].t,SK[res.id].h,"art w"+SK[res.id].t)}></div><div><h3>Победа!</h3><p>${SK[res.id].n} теперь в инвентаре</p></div>`:`<div><h3>Не повезло</h3><p>Ставка сгорела. Попробуй ещё раз — шанс всегда есть.</p></div>`}</div>`:"";
+  return `<div class="wheelBox" id="wb"><svg viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="86"/><circle class="arc" cx="100" cy="100" r="86" transform="rotate(-90 100 100)" stroke-dasharray="${Math.max(p*C,p>0?.6:0).toFixed(2)} ${C.toFixed(1)}"/><g class="needle" id="nd" style="transform:rotate(${R}deg)"><path d="M92 2h16l-8 21z"/></g></svg>
+  <div class="mid"><b>${pct(p)}</b><span>шанс победы</span></div></div>${r}
   <div class="sec"><h2>Ставка</h2><div class="stake"><span>Сумма ставки</span><b><span style="color:var(--gold)">◈</span> ${fmt(stakeVal())}</b></div>
-  <div class="chips">${[100,500,1000,5000].map(v=>`<button class="chip" onclick="addX(${v})">+${fmt(v)}</button>`).join("")}<button class="chip" onclick="addX(st.bal)">Всё</button><button class="chip x" onclick="clr()">Сбросить</button></div></div>
+  <div class="chips">${[1,10,100,500,1000,5000].map(v=>`<button class="chip" onclick="addX(${v})">+${fmt(v)}</button>`).join("")}<button class="chip" onclick="addX(st.bal)">Всё</button><button class="chip x" onclick="clr()">Сбросить</button></div></div>
   <div class="sec"><h2>Твои скины в ставку</h2>${stakeCards}</div>
-  <div class="sec"><h2>Что хочешь получить</h2>${tg?`<div class="row">${tg}</div>`:`<div class="empty">Нет скинов дороже такой ставки</div>`}</div>
+  <div class="sec"><h2>Что хочешь получить · быстрый шанс</h2><div class="chips" style="margin-bottom:10px">${[.01,1,10,35,55,75].map(x=>`<button class="chip" onclick="setCh(${x})">${x}%</button>`).join("")}</div>${tg?`<div class="row">${tg}</div>`:`<div class="empty">Нет скинов дороже такой ставки</div>`}</div>
   <button class="go" id="gob" onclick="spin()" ${err||busy?"disabled":""}>Апгрейд</button><div class="hint">${busy?"Крутим…":err}</div>`}
 function go(t){if(busy)return;tab=t;render();scrollTo(0,0)}
 function tog(u){if(busy)return;sel.has(u)?sel.delete(u):sel.add(u);fix();render()}
@@ -144,7 +157,7 @@ function addX(v){if(busy)return;extra=Math.min(st.bal,extra+v);fix();render()}
 function clr(){if(busy)return;sel.clear();extra=0;render()}
 function fix(){if(target!==null&&SK[target].p<=stakeVal())target=null;res=null}
 function buy(id){const s=SK[id];if(st.bal<s.p)return;st.bal-=s.p;st.inv.push({uid:st.uid++,id,s:[]});save();render();bump();toast("Куплено: "+s.n)}
-let rc=0;function resetAll(){if(!rc){rc=1;toast("Нажми ещё раз, чтобы сбросить всё");setTimeout(()=>rc=0,3000);return}rc=0;st={bal:10000,inv:[],uid:1};sel.clear();extra=0;target=null;res=null;save();render()}
+let rc=0;function resetAll(){if(!rc){rc=1;toast("Нажми ещё раз, чтобы сбросить всё");setTimeout(()=>rc=0,3000);return}rc=0;st={bal:1000,inv:[],uid:1,stk:[],pf:st.pf,im:st.im};sel.clear();extra=0;target=null;res=null;save();render()}
 function spin(){
   if(busy||check())return;
   const p=chance(),tid=target;busy=true;res=null;
@@ -170,31 +183,34 @@ for(const t of T)for(const w of W){let p=20*Math.pow(1500,r())*(t==="Клино�
 const STK=[["🔥","Огонь",40],["💎","Алмаз",300],["👑","Корона",1200],["🎯","Мишень",60],["🐺","Волк",150],["⚡","Молния",90],["🦄","Единорог",800],["💀","Череп",220],["🍀","Клевер",35],["🚀","Ракета",500],["🌙","Луна",120],["🧊","Лёд",70],["🐉","Дракон",2500],["⭐","Звезда",180],["🎲","Кости",45],["🦅","Орёл",350],["🌋","Вулкан",650],["🪐","Планета",1600],["🍄","Гриб",30],["🕶️","Очки",110],["🧿","Талисман",420],["🏆","Кубок",3000]].map((a,i)=>({id:i,e:a[0],n:a[1],p:a[2]}));
 SK.forEach((k,i)=>{if(k.t===undefined)k.t=i%8});
 const RK=[...SK].sort((a,b)=>a.p-b.p);
-const CB=[["Рассвет",0,60,20],["Тайга",30,100,150],["Мираж",70,140,280],["Бархат",110,170,320],["Метеор",150,SK.length,45]].map(a=>{const pool=RK.slice(a[1],a[2]),W=pool.reduce((x,s)=>x+1/s.p,0);return{n:"Кейс «"+a[0]+"»",pool,W,h:a[3],price:Math.max(10,Math.round(pool.length/W*1.12/10)*10)}});
+const hu=(a,b)=>RK.filter(s=>a<=b?s.h>=a&&s.h<=b:(s.h>=a||s.h<=b));
+const ty=t=>RK.filter(s=>s.t===t);
+const CB=[["Рассвет",20,RK.slice(0,60),1],["Тайга",150,RK.slice(30,100),1],["Мираж",280,RK.slice(70,140),1],["Бархат",320,RK.slice(110,170),1],["Метеор",45,RK.slice(150),1],["Арсенал",200,RK.filter(s=>s.t<2),1],["Снайперы",160,ty(2),1],["Пистолеты",30,ty(3),1],["Дробь",10,ty(4),1],["Спринт",250,ty(5),1],["Клинки",340,ty(6),1],["Перчатки",300,ty(7),1],["Все подряд",120,RK,1],["Рискованный",0,RK,2],["Золотой",48,RK.slice(-40),1],["Копилка",90,RK.slice(0,40),1],["Багровый",355,hu(340,20),1],["Ледяной",195,hu(170,250),1],["Лесной",120,hu(80,160),1],["Безопасный",230,RK.slice(60,160),.5]].map(a=>{const pool=a[2],e=a[3],ws=pool.map(s=>Math.pow(s.p,-e)),W=ws.reduce((x,y)=>x+y,0),ev=pool.reduce((x,s,i)=>x+s.p*ws[i],0)/W;return{n:"Кейс «"+a[0]+"»",pool,ws,W,h:a[1],price:Math.max(10,Math.round(ev*1.12/10)*10)}});
 let cs=null,drop=null,ss=null,q="",lim=24;
 const itemVal=i=>SK[i.id].p+Math.round(.5*(i.s||[]).reduce((a,k)=>a+STK[k].p,0));
 const iv=i=>({...SK[i.id],p:itemVal(i),st:i.s||[]});
-const tgList=()=>{const v=stakeVal();return(v?RK.filter(s=>s.p>v&&v/s.p*EDGE>=.01):RK).slice(0,40)};
-function navR(){document.getElementById("balv").textContent=fmt(st.bal);document.getElementById("nav").innerHTML=[["up","Апгрейд"],["case","Кейсы"],["shop","Магазин"],["inv","Скины · "+st.inv.length]].map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
-function render(){navR();document.getElementById("main").innerHTML=tab==="up"?vUp():tab==="case"?vCase():tab==="shop"?vShop():vInv()}
-const stkCard=(k,x,c)=>{const s=STK[k];return `<button class="card ${ss===x?"sel":""}" style="flex:0 0 96px" onclick="${c}"><div class="art sa" style="--h:${k*37%360};height:56px;display:grid;place-items:center;font-size:30px"><span style="position:relative;z-index:1">${s.e}</span></div><div class="nm">${s.n}</div><div class="pr"><i>◈</i> ${fmt(s.p)}</div><div class="rar ${rar(s.p)}"></div></button>`};
+const tgList=()=>{const v=stakeVal();return v?RK.filter(s=>s.p>v&&v/s.p*EDGE>=.0001):RK.slice(0,40)};
+const pct=p=>{const x=p*100;return(x>=10?x.toFixed(0):x>=1?x.toFixed(1):x.toFixed(2))+"%"};
+function navR(){document.getElementById("balv").textContent=fmt(st.bal);document.getElementById("me").innerHTML=av(st.pf)+"<b>"+esc(nick())+"</b>";const pv=document.getElementById("pv");if(pv)pv.innerHTML=pvH();document.getElementById("nav").innerHTML=[["up","Апгрейд"],["case","Кейсы"],["shop","Магазин"],["inv","Скины · "+st.inv.length]].map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
+function render(){navR();document.getElementById("main").innerHTML=tab==="up"?vUp():tab==="pf"?vPf():tab==="case"?vCase():tab==="shop"?vShop():vInv()}
+const stkCard=(k,x,c)=>{const s=STK[k];return `<button class="card ${ss===x?"sel":""}" style="flex:0 0 96px" onclick="${c}"><div class="art sa${st.im["s"+k]?" ph":""}" style="--h:${k*37%360};height:56px;display:grid;place-items:center;font-size:30px${st.im["s"+k]?`;--im:url(${st.im["s"+k]})`:""}"><span style="position:relative;z-index:1">${st.im["s"+k]?"":s.e}</span></div><div class="nm">${s.n}</div><div class="pr"><i>◈</i> ${fmt(s.p)}</div><div class="rar ${rar(s.p)}"></div></button>`};
 function shopGrid(){const l=SK.filter(s=>s.n.toLowerCase().includes(q.toLowerCase())).sort((a,b)=>a.p-b.p);return `<div class="grid">${l.slice(0,lim).map(s=>card(s,{extra:`<button class="btn buy" ${st.bal<s.p?"disabled":""} onclick="buy(${s.id})">Купить</button>`})).join("")}</div>${l.length>lim?`<button class="btn" style="padding:12px" onclick="lim+=24;document.getElementById('sg').innerHTML=shopGrid()">Показать ещё</button>`:l.length?"":`<div class="empty">Ничего не найдено</div>`}`}
 function vShop(){return `<div class="sec"><h2>Наклейки · нажми, чтобы купить</h2><div class="row">${STK.map(s=>stkCard(s.id,-1,`buyS(${s.id})`)).join("")}</div></div><div class="sec"><h2>Скины · ${SK.length}</h2><input class="srch" placeholder="Поиск по названию" value="${q.replace(/"/g,"&quot;")}" oninput="q=this.value;lim=24;document.getElementById('sg').innerHTML=shopGrid()"><div id="sg">${shopGrid()}</div></div>`}
 function vInv(){
   const stk=st.stk.length?`<div class="row">${st.stk.map((k,x)=>stkCard(k,x,`selS(${x})`)).join("")}</div>`:`<div class="empty">Наклеек нет. Купи их в магазине.</div>`;
   const sk=st.inv.length?`<div class="grid">${st.inv.map(i=>card(iv(i),{extra:(ss!==null?`<button class="btn buy" ${i.s.length>=4?"disabled":""} onclick="stick(${i.uid})">Наклеить ${STK[st.stk[ss]].e}</button>`:"")+`<button class="btn" onclick="sell(${i.uid})">Продать за ${fmt(itemVal(i))}</button>`})).join("")}</div>`:`<div class="empty">Пока пусто<br><button onclick="go('case')">Открыть кейс</button></div>`;
-  return `<div class="sec"><h2>Наклейки · выбери и наклей на скин, до 4 штук</h2>${stk}</div><div class="sec"><h2>Скины</h2>${sk}</div><button class="reset" onclick="resetAll()">Начать заново с 10 000</button>`}
+  return `<div class="sec"><h2>Наклейки · выбери и наклей на скин, до 4 штук</h2>${stk}</div><div class="sec"><h2>Скины</h2>${sk}</div><button class="reset" onclick="resetAll()">Начать заново с 1 000</button>`}
 function selS(x){ss=ss===x?null:x;render()}
 function stick(u){const it=st.inv.find(i=>i.uid===u);if(!it||ss===null||it.s.length>=4)return;it.s.push(st.stk[ss]);st.stk.splice(ss,1);ss=null;save();render();toast("Наклейка добавлена, цена выросла")}
 function buyS(k){const s=STK[k];if(st.bal<s.p){toast("Не хватает монет");return}st.bal-=s.p;st.stk.push(k);save();render();bump();toast("Куплено: "+s.n)}
 function sell(u){const k=st.inv.findIndex(i=>i.uid===u);if(k<0)return;const v=itemVal(st.inv[k]);st.inv.splice(k,1);st.bal+=v;sel.delete(u);if(drop&&drop.uid===u)drop=null;save();render();bump();toast("Продано за ◈ "+fmt(v))}
-const pickFrom=c=>{let r=Math.random()*c.W;for(const s of c.pool){r-=1/s.p;if(r<=0)return s}return c.pool[0]};
-const cellH=s=>`<div class="cell"><div class="art w${s.t}" style="--h:${s.h}"></div><div class="nm">${s.n}</div><div class="rar ${rar(s.p)}"></div></div>`;
-const resC=()=>drop?`<div class="res win"><div class="art w${drop.s.t}" style="--h:${drop.s.h}"></div><div><h3>${drop.s.n}</h3><p>Стоимость ◈ ${fmt(drop.s.p)}</p><button class="btn" onclick="sell(${drop.uid})">Продать за ${fmt(drop.s.p)}</button></div></div>`:"";
+const pickFrom=c=>{let r=Math.random()*c.W;for(let i=0;i<c.pool.length;i++){r-=c.ws[i];if(r<=0)return c.pool[i]}return c.pool[0]};
+const cellH=s=>`<div class="cell"><div ${ia("w"+s.t,s.h,"art w"+s.t)}></div><div class="nm">${s.n}</div><div class="rar ${rar(s.p)}"></div></div>`;
+const resC=()=>drop?`<div class="res win"><div ${ia("w"+drop.s.t,drop.s.h,"art w"+drop.s.t)}></div><div><h3>${drop.s.n}</h3><p>Стоимость ◈ ${fmt(drop.s.p)}</p><button class="btn" onclick="sell(${drop.uid})">Продать за ${fmt(drop.s.p)}</button></div></div>`:"";
 function vCase(){
-  if(cs===null)return `<div class="sec"><h2>Кейсы</h2><div class="grid">${CB.map((c,i)=>`<button class="card" onclick="cs=${i};drop=null;render()"><div class="art cr" style="--h:${c.h}"></div><div class="nm">${c.n}</div><div class="pr"><i>◈</i> ${fmt(c.price)} · ${c.pool.length} предм.</div></button>`).join("")}</div></div>`;
+  if(cs===null)return `<div class="sec"><h2>Кейсы</h2><div class="grid">${CB.map((c,i)=>`<button class="card" onclick="cs=${i};drop=null;render()"><div ${ia("c"+i,c.h,"art cr")}></div><div class="nm">${c.n}</div><div class="pr"><i>◈</i> ${fmt(c.price)} · ${c.pool.length} предм.</div></button>`).join("")}</div></div>`;
   const c=CB[cs];
-  return `<div class="sec"><button class="chip" onclick="if(!busy){cs=null;render()}">‹ Все кейсы</button><h2 style="margin-top:14px">${c.n}</h2><div class="roul" id="rl"><div class="mk"></div><div class="strip" id="strip">${Array.from({length:12},()=>cellH(pickFrom(c))).join("")}</div></div><div id="cres">${resC()}</div><button class="go" onclick="openCase()" ${busy?"disabled":""}>Открыть за ◈ ${fmt(c.price)}</button></div><div class="sec"><h2>Что может выпасть · шанс</h2><div class="grid">${[...c.pool].reverse().map(s=>card(s,{tag:(100/s.p/c.W).toFixed(1)+"%"})).join("")}</div></div>`}
+  return `<div class="sec"><button class="chip" onclick="if(!busy){cs=null;render()}">‹ Все кейсы</button><h2 style="margin-top:14px">${c.n}</h2><div class="roul" id="rl"><div class="mk"></div><div class="strip" id="strip">${Array.from({length:12},()=>cellH(pickFrom(c))).join("")}</div></div><div id="cres">${resC()}</div><button class="go" onclick="openCase()" ${busy?"disabled":""}>Открыть за ◈ ${fmt(c.price)}</button></div><div class="sec"><h2>Что может выпасть · показано ${Math.min(40,c.pool.length)} из ${c.pool.length}</h2><div class="grid">${c.pool.map((s,i)=>[s,c.ws[i]/c.W]).reverse().slice(0,40).map(([s,w])=>card(s,{tag:(w*100).toFixed(w<.001?2:1)+"%"})).join("")}</div></div>`}
 function openCase(){
   const c=CB[cs];if(busy)return;if(st.bal<c.price){toast("Не хватает монет");return}
   busy=true;drop=null;st.bal-=c.price;navR();document.getElementById("cres").innerHTML="";document.querySelector(".go").disabled=true;
@@ -204,6 +220,35 @@ function openCase(){
   const off=WI*120+56-rl.clientWidth/2+(Math.random()*60-30);
   strip.style.transition="transform 5s cubic-bezier(.08,.7,.1,1)";strip.style.transform=`translateX(${-off}px)`;
   setTimeout(()=>{busy=false;const uid=st.uid++;st.inv.push({uid,id:win.id,s:[]});drop={s:win,uid};save();navR();bump();document.getElementById("cres").innerHTML=resC();document.querySelector(".go").disabled=false;toast("Выпало: "+win.n)},5100)}
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nick=()=>(st.pf.n||"").trim()||"Игрок";
+const av=(p,c)=>`<span class="av ${c||""}" style="--h:${p.c}">${p.img?`<img alt="" src="${p.img}">`:p.e}</span>`;
+const pvH=()=>av(st.pf,"big")+`<div class="nm" style="font-size:18px;text-align:center">${esc(nick())}</div>`;
+const EM=["🦊","🐼","🐯","🦁","🐸","🐙","🦄","🐲","🦉","🐺","🐧","🐨","🤖","👾","👽","💀","🔥","⚡","🌙","⭐","🎯","👑","💎","🚀"];
+function vPf(){const p=st.pf;return `<div class="sec"><div id="pv">${pvH()}</div>
+<h2>Никнейм</h2><input class="srch" maxlength="16" placeholder="Твой ник" value="${esc(p.n)}" oninput="setNick(this.value)" style="margin-bottom:20px">
+<h2>Иконка</h2><div class="avg">${EM.map(e=>`<button class="eb ${p.e===e&&!p.img?"sel":""}" onclick="setEm('${e}')">${e}</button>`).join("")}</div>
+<h2>Цвет фона</h2><input type="range" class="rg" min="0" max="359" value="${p.c}" oninput="setHue(this.value)">
+<h2>Своё фото</h2><div class="chips"><label class="chip" for="upf">Загрузить фото</label><input type="file" id="upf" accept="image/*" hidden onchange="upImg(this)">${p.img?`<button class="chip x" onclick="rmImg()">Убрать фото</button>`:""}</div>
+<h2 style="margin-top:20px">Свои картинки для предметов</h2><p class="hint" style="text-align:left;margin:0 0 12px">Нажми на плитку и выбери своё фото. Оно заменит рисунок у всех предметов этого типа.</p>${slots("Оружие",TN.map((n,i)=>["w"+i,n,"art w"+i,i*45]))}${slots("Кейсы",CB.map((c,i)=>["c"+i,c.n.replace("Кейс ",""),"art cr",c.h]))}${slots("Наклейки",STK.map(k=>["s"+k.id,k.n,"art sa",k.id*37%360]))}${Object.keys(st.im).length?`<button class="chip x" onclick="st.im={};save();render()">Вернуть все рисунки</button>`:""}<button class="go" onclick="go('up')">Готово</button></div>`}
+function setNick(v){st.pf.n=String(v).slice(0,16);save();navR()}
+function setEm(e){st.pf.e=e;st.pf.img="";save();render()}
+function setHue(v){st.pf.c=+v;save();navR()}
+function rmImg(){st.pf.img="";save();render()}
+function upImg(inp){const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10e6){toast("Файл слишком большой");return}
+  const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{try{const c=document.createElement("canvas");c.width=c.height=128;const m=Math.min(im.width,im.height);c.getContext("2d").drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,128,128);st.pf.img=c.toDataURL("image/jpeg",.85);save();render();toast("Фото установлено")}catch(e){toast("Не удалось загрузить фото")}};im.onerror=()=>toast("Это не картинка");im.src=rd.result};rd.readAsDataURL(f)}
+
+const TN=["Автомат","Винтовка","Снайперка","Пистолет","Дробовик","ПП","Клинок","Перчатки"];
+const ia=(k,h,c)=>{const m=st.im[k];return `class="${c}${m?" ph":""}" style="--h:${h}${m?`;--im:url(${m})`:""}"`};
+const slots=(t,a)=>`<h2>${t}</h2><div class="slots">${a.map(([k,n,c,h])=>`<label class="slot"><div ${ia(k,h,c)}></div><span>${esc(n)}</span><input type="file" accept="image/*" hidden onchange="upIm('${k}',this)"></label>`).join("")}</div>`;
+function upIm(k,inp){const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10e6){toast("Файл слишком большой");return}
+  const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{try{const c=document.createElement("canvas");c.width=256;c.height=144;const r=Math.max(256/im.width,144/im.height),w=im.width*r,h=im.height*r;c.getContext("2d").drawImage(im,(256-w)/2,(144-h)/2,w,h);st.im[k]=c.toDataURL("image/jpeg",.8);save();render();toast("Картинка установлена")}catch(e){toast("Не удалось загрузить")}};im.onerror=()=>toast("Это не картинка");im.src=rd.result};rd.readAsDataURL(f)}
+
+function setCh(x){if(busy)return;const v=stakeVal();if(!v){toast("Сначала добавь ставку");return}
+  const c=tgList();if(!c.length){toast("Нет подходящих скинов");return}
+  let b=c[0],bd=1e9;for(const s of c){const ch=Math.min(.9,v/s.p*EDGE)*100,d=Math.abs(Math.log(ch/x));if(d<bd){bd=d;b=s}}
+  target=b.id;res=null;render();toast("Шанс "+pct(chance()));const e=document.querySelector(".card.sel[onclick^='pick']");if(e)e.scrollIntoView({inline:"center",block:"nearest"})}
 render();
 </script>
 </body>
