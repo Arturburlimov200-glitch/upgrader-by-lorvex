@@ -123,9 +123,9 @@ nav button{font-size:13px;padding:12px 4px}
 window.onerror=function(m,u,l){var e=document.getElementById("main");if(e)e.innerHTML='<div class="empty">Ошибка: '+m+' (строка '+l+')</div>'};
 const SK=[["Неоновый Шторм",50,300],["Пыльная Дюна",120,38],["Ледяной Шёпот",250,195],["Медный Закат",400,20],["Тихий Омут",700,215],["Изумрудный Клык",1100,150],["Ночной Рейс",1800,250],["Багровый Орден",2800,350],["Лунная Пыль",4200,265],["Золотая Лихорадка",6500,45],["Призрак Вулкана",10000,8],["Королевский Кобальт",16000,225],["Абсолютный Ноль",30000,180]].map((a,i)=>({id:i,n:a[0],p:a[1],h:a[2]}));
 const KEY="upgrader-v1",EDGE=.95;
-let st={bal:1000,inv:[],uid:1};
+let st={bal:1000,inv:[],uid:1,fresh:1};
 try{const s=localStorage.getItem(KEY);if(s)st=JSON.parse(s)}catch(e){}
-if(!st||typeof st.bal!=="number"||!Array.isArray(st.inv))st={bal:1000,inv:[],uid:1};st.uid=st.uid||(st.inv.length+1)+100;st.stk=st.stk||[];st.pf=st.pf||{n:"Игрок",e:"🦊",c:260,img:""};st.im=st.im||{};st.inv=st.inv.filter(i=>i&&i.id<999);st.inv.forEach(i=>i.s=i.s||[]);
+if(!st||typeof st.bal!=="number"||!Array.isArray(st.inv))st={bal:1000,inv:[],uid:1,fresh:1};st.uid=st.uid||(st.inv.length+1)+100;st.stk=st.stk||[];st.pf=st.pf||{n:"Игрок",e:"🦊",c:260,img:""};st.im=st.im||{};st.inv=st.inv.filter(i=>i&&i.id<999);st.inv.forEach(i=>i.s=i.s||[]);
 let tab="up",sel=new Set(),extra=0,target=null,R=0,busy=false,res=null,hint="";
 const fmt=n=>Math.round(n).toLocaleString("ru-RU");
 const rar=p=>p<300?"c0":p<1500?"c1":p<5000?"c2":p<12000?"c3":"c4";
@@ -148,7 +148,7 @@ function vUp(){
   <div class="sec"><h2>Ставка</h2><div class="stake"><span>Сумма ставки</span><b><span style="color:var(--gold)">◈</span> ${fmt(stakeVal())}</b></div>
   <div class="chips">${[1,10,100,500,1000,5000].map(v=>`<button class="chip" onclick="addX(${v})">+${fmt(v)}</button>`).join("")}<button class="chip" onclick="addX(st.bal)">Всё</button><button class="chip x" onclick="clr()">Сбросить</button></div></div>
   <div class="sec"><h2>Твои скины в ставку</h2>${stakeCards}</div>
-  <div class="sec"><h2>Что хочешь получить · быстрый шанс</h2><div class="chips" style="margin-bottom:10px">${[.01,1,10,35,55,75].map(x=>`<button class="chip" onclick="setCh(${x})">${x}%</button>`).join("")}</div>${tg?`<div class="row">${tg}</div>`:`<div class="empty">Нет скинов дороже такой ставки</div>`}</div>
+  <div class="sec"><h2>Что хочешь получить · быстрый шанс</h2><div class="chips" style="margin-bottom:10px">${[.01,1,10,25,35,50,55,75].map(x=>`<button class="chip" onclick="setCh(${x})">${x}%</button>`).join("")}</div>${tg?`<div class="row">${tg}</div>`:`<div class="empty">Нет скинов дороже такой ставки</div>`}</div>
   <button class="go" id="gob" onclick="spin()" ${err||busy?"disabled":""}>Апгрейд</button><div class="hint">${busy?"Крутим…":err}</div>`}
 function go(t){if(busy)return;tab=t;render();scrollTo(0,0)}
 function tog(u){if(busy)return;sel.has(u)?sel.delete(u):sel.add(u);fix();render()}
@@ -157,7 +157,7 @@ function addX(v){if(busy)return;extra=Math.min(st.bal,extra+v);fix();render()}
 function clr(){if(busy)return;sel.clear();extra=0;render()}
 function fix(){if(target!==null&&SK[target].p<=stakeVal())target=null;res=null}
 function buy(id){const s=SK[id];if(st.bal<s.p)return;st.bal-=s.p;st.inv.push({uid:st.uid++,id,s:[]});save();render();bump();toast("Куплено: "+s.n)}
-let rc=0;function resetAll(){if(!rc){rc=1;toast("Нажми ещё раз, чтобы сбросить всё");setTimeout(()=>rc=0,3000);return}rc=0;st={bal:1000,inv:[],uid:1,stk:[],pf:st.pf,im:st.im};sel.clear();extra=0;target=null;res=null;save();render()}
+let rc=0;function resetAll(){if(!rc){rc=1;toast("Нажми ещё раз, чтобы сбросить всё");setTimeout(()=>rc=0,3000);return}rc=0;st={bal:1000,inv:[],uid:1,stk:[],pf:st.pf,im:st.im,fresh:1};giveStart();sel.clear();extra=0;target=null;res=null;save();render()}
 function spin(){
   if(busy||check())return;
   const p=chance(),tid=target;busy=true;res=null;
@@ -180,12 +180,17 @@ function spin(){
 
 (()=>{const T=["Автомат","Винтовка","Снайперка","Пистолет","Дробовик","ПП","Клинок","Перчатки"],W=["Янтарь","Вьюга","Орхидея","Базальт","Сирена","Кварц","Мираж","Бархат","Тайфун","Лаванда","Обсидиан","Рассвет","Мангуст","Нефрит","Сумерки","Пепел","Колибри","Гранат","Прибой","Стрела","Оазис","Гроза","Шёлк","Метеор","Тундра"];let x=7;const r=()=>(x=x*16807%2147483647)/2147483647;
 for(const t of T)for(const w of W){let p=20*Math.pow(1500,r())*(t==="Клинок"||t==="Перчатки"?2:1);p=p<100?Math.round(p/5)*5:Math.round(p/10)*10;SK.push({id:SK.length,n:w+" · "+t,p,h:Math.floor(r()*360),t:T.indexOf(t)})}})();
+const STARTERS=[0];
+(()=>{const T=["Автомат","Винтовка","Снайперка","Пистолет","Дробовик","ПП","Клинок","Перчатки"],W=["Император","Феникс","Левиафан","Аврора","Зодиак","Сапфир","Громовержец","Нирвана","Кардинал","Эклипс","Оникс","Валькирия","Сфинкс","Титан","Хроно"];let x=13;const r=()=>(x=x*16807%2147483647)/2147483647;
+for(let i=0;i<T.length;i++)for(const w of W){let p=30000*Math.pow(7e6/3e4,r())*(i>5?1.5:1);p=Math.min(p,6.9e6);const d=Math.pow(10,Math.floor(Math.log10(p))-1);p=Math.round(p/d)*d;SK.push({id:SK.length,n:w+" · "+T[i],p,h:Math.floor(r()*360),t:i})}
+SK.push({id:SK.length,n:"Корона Мира · Клинок",p:7e6,h:48,t:6});
+for(const [n,t] of [["Новичок · Пистолет",3],["Новичок · ПП",5]]){STARTERS.push(SK.length);SK.push({id:SK.length,n,p:50,h:n.length*40%360,t})}})();
 const STK=[["🔥","Огонь",40],["💎","Алмаз",300],["👑","Корона",1200],["🎯","Мишень",60],["🐺","Волк",150],["⚡","Молния",90],["🦄","Единорог",800],["💀","Череп",220],["🍀","Клевер",35],["🚀","Ракета",500],["🌙","Луна",120],["🧊","Лёд",70],["🐉","Дракон",2500],["⭐","Звезда",180],["🎲","Кости",45],["🦅","Орёл",350],["🌋","Вулкан",650],["🪐","Планета",1600],["🍄","Гриб",30],["🕶️","Очки",110],["🧿","Талисман",420],["🏆","Кубок",3000]].map((a,i)=>({id:i,e:a[0],n:a[1],p:a[2]}));
 SK.forEach((k,i)=>{if(k.t===undefined)k.t=i%8});
 const RK=[...SK].sort((a,b)=>a.p-b.p);
 const hu=(a,b)=>RK.filter(s=>a<=b?s.h>=a&&s.h<=b:(s.h>=a||s.h<=b));
 const ty=t=>RK.filter(s=>s.t===t);
-const CB=[["Рассвет",20,RK.slice(0,60),1],["Тайга",150,RK.slice(30,100),1],["Мираж",280,RK.slice(70,140),1],["Бархат",320,RK.slice(110,170),1],["Метеор",45,RK.slice(150),1],["Арсенал",200,RK.filter(s=>s.t<2),1],["Снайперы",160,ty(2),1],["Пистолеты",30,ty(3),1],["Дробь",10,ty(4),1],["Спринт",250,ty(5),1],["Клинки",340,ty(6),1],["Перчатки",300,ty(7),1],["Все подряд",120,RK,1],["Рискованный",0,RK,2],["Золотой",48,RK.slice(-40),1],["Копилка",90,RK.slice(0,40),1],["Багровый",355,hu(340,20),1],["Ледяной",195,hu(170,250),1],["Лесной",120,hu(80,160),1],["Безопасный",230,RK.slice(60,160),.5]].map(a=>{const pool=a[2],e=a[3],ws=pool.map(s=>Math.pow(s.p,-e)),W=ws.reduce((x,y)=>x+y,0),ev=pool.reduce((x,s,i)=>x+s.p*ws[i],0)/W;return{n:"Кейс «"+a[0]+"»",pool,ws,W,h:a[1],price:Math.max(10,Math.round(ev*1.12/10)*10)}});
+const CB=[["Рассвет",20,RK.slice(0,60),1],["Тайга",150,RK.slice(30,100),1],["Мираж",280,RK.slice(70,140),1],["Бархат",320,RK.slice(110,170),1],["Метеор",45,RK.slice(150,213),1],["Арсенал",200,RK.filter(s=>s.t<2),1],["Снайперы",160,ty(2),1],["Пистолеты",30,ty(3),1],["Дробь",10,ty(4),1],["Спринт",250,ty(5),1],["Клинки",340,ty(6),1],["Перчатки",300,ty(7),1],["Все подряд",120,RK,1],["Рискованный",0,RK,2],["Золотой",48,RK.slice(-40),1],["Копилка",90,RK.slice(0,40),1],["Багровый",355,hu(340,20),1],["Ледяной",195,hu(170,250),1],["Лесной",120,hu(80,160),1],["Безопасный",230,RK.slice(60,160),.5]].map(a=>{const pool=a[2],e=a[3],ws=pool.map(s=>Math.pow(s.p,-e)),W=ws.reduce((x,y)=>x+y,0),ev=pool.reduce((x,s,i)=>x+s.p*ws[i],0)/W;return{n:"Кейс «"+a[0]+"»",pool,ws,W,h:a[1],price:Math.max(10,Math.round(ev*1.12/10)*10)}});
 let cs=null,drop=null,ss=null,q="",lim=24;
 const itemVal=i=>SK[i.id].p+Math.round(.5*(i.s||[]).reduce((a,k)=>a+STK[k].p,0));
 const iv=i=>({...SK[i.id],p:itemVal(i),st:i.s||[]});
@@ -249,6 +254,9 @@ function setCh(x){if(busy)return;const v=stakeVal();if(!v){toast("Сначала
   const c=tgList();if(!c.length){toast("Нет подходящих скинов");return}
   let b=c[0],bd=1e9;for(const s of c){const ch=Math.min(.9,v/s.p*EDGE)*100,d=Math.abs(Math.log(ch/x));if(d<bd){bd=d;b=s}}
   target=b.id;res=null;render();toast("Шанс "+pct(chance()));const e=document.querySelector(".card.sel[onclick^='pick']");if(e)e.scrollIntoView({inline:"center",block:"nearest"})}
+
+function giveStart(){if(st.fresh){STARTERS.forEach(id=>st.inv.push({uid:st.uid++,id,s:[]}));delete st.fresh;save()}}
+giveStart();
 render();
 </script>
 </body>
