@@ -109,6 +109,19 @@ nav button{font-size:13px;padding:12px 4px}
 .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .slot{background:var(--s1);border-radius:14px;padding:6px;font-size:12px;font-weight:800;text-align:center;cursor:pointer}
 .slot .art{height:52px;margin-bottom:4px}.slot span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header{backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 88%,transparent)}
+nav{backdrop-filter:blur(10px);background:color-mix(in srgb,var(--bg) 90%,transparent)}
+nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;padding:8px 4px}
+.ni{font-size:19px;line-height:1}
+.sum{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--s1);border-radius:16px;padding:12px 14px;margin-bottom:6px}
+.sum>div:not(.ar){flex:1;min-width:0}.sum>div:last-child{text-align:right}
+.sum b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sum small{display:block;color:var(--mu);font-size:12px}
+.sum .ar{color:var(--ac);font-size:20px;font-weight:800}
+.go{box-shadow:0 8px 24px color-mix(in srgb,var(--ac) 35%,transparent)}
+.go[disabled]{box-shadow:none}
+.sec h2{font-size:14px;color:var(--tx);opacity:.75}
+.chip{min-height:38px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -140,16 +153,16 @@ function chance(){const s=stakeVal();if(!target&&target!==0||!s)return 0;return 
 function check(){const s=stakeVal();if(!s)return"Выбери скины или добавь монеты в ставку";if(target===null)return"Выбери скин, который хочешь получить";if(SK[target].p<=s)return"Выбери скин дороже ставки";if(chance()<.0001)return"Шанс ниже 0.01% — увеличь ставку";return""}
 function vUp(){
   const p=chance(),C=2*Math.PI*86,err=check();
-  const stakeCards=st.inv.length?`<div class="row">${st.inv.map(i=>card(iv(i),{sel:sel.has(i.uid),click:`tog(${i.uid})`,tag:sel.has(i.uid)?"✓":""})).join("")}</div>`:`<div class="empty">В инвентаре пусто. Купи скин в магазине или сделай ставку монетами.</div>`;
+  const stakeCards=st.inv.length?`<div class="row">${st.inv.slice().sort((a,b)=>itemVal(b)-itemVal(a)).map(i=>card(iv(i),{sel:sel.has(i.uid),click:`tog(${i.uid})`,tag:sel.has(i.uid)?"✓":""})).join("")}</div>`:`<div class="empty">В инвентаре пусто. Купи скин в магазине или сделай ставку монетами.</div>`;
   const tg=tgList().map(s=>card(s,{sel:target===s.id,click:`pick(${s.id})`,tag:stakeVal()?pct(Math.min(.9,stakeVal()/s.p*EDGE)):""})).join("");
   const r=res?`<div class="res ${res.win?"win":"lose"}">${res.win?`<div ${ia("w"+SK[res.id].t,SK[res.id].h,"art w"+SK[res.id].t)}></div><div><h3>Победа!</h3><p>${SK[res.id].n} теперь в инвентаре</p></div>`:`<div><h3>Не повезло</h3><p>Ставка сгорела. Попробуй ещё раз — шанс всегда есть.</p></div>`}</div>`:"";
-  return `<div class="wheelBox" id="wb"><svg viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="86"/><circle class="arc" cx="100" cy="100" r="86" transform="rotate(-90 100 100)" stroke-dasharray="${Math.max(p*C,p>0?.6:0).toFixed(2)} ${C.toFixed(1)}"/><g class="needle" id="nd" style="transform:rotate(${R}deg)"><path d="M92 2h16l-8 21z"/></g></svg>
+  return `<button class="go" id="gob" onclick="spin()" style="margin-top:0" ${err||busy?"disabled":""}>Апгрейд</button><div class="hint" style="margin-bottom:6px">${busy?"Крутим…":err}</div><div class="sum"><div><small>Ставка</small><b>◈ ${fmt(stakeVal())}</b></div><div class="ar">→</div><div><small>Цель</small><b>${target!==null?esc(SK[target].n):"не выбрана"}</b><small>${target!==null?"◈ "+fmt(SK[target].p):"выбери ниже"}</small></div></div><div class="wheelBox" id="wb"><svg viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="86"/><circle class="arc" cx="100" cy="100" r="86" transform="rotate(-90 100 100)" stroke-dasharray="${Math.max(p*C,p>0?.6:0).toFixed(2)} ${C.toFixed(1)}"/><g class="needle" id="nd" style="transform:rotate(${R}deg)"><path d="M92 2h16l-8 21z"/></g></svg>
   <div class="mid"><b>${pct(p)}</b><span>шанс победы</span></div></div>${r}
   <div class="sec"><h2>Ставка</h2><div class="stake"><span>Сумма ставки</span><b><span style="color:var(--gold)">◈</span> ${fmt(stakeVal())}</b></div>
-  <div class="chips">${[1,10,100,500,1000,5000].map(v=>`<button class="chip" onclick="addX(${v})">+${fmt(v)}</button>`).join("")}<button class="chip" onclick="addX(st.bal)">Всё</button><button class="chip x" onclick="clr()">Сбросить</button></div></div>
+  <div class="chips">${[1,10,100,500,1000,5000].map(v=>`<button class="chip" onclick="addX(${v})">+${fmt(v)}</button>`).join("")}<button class="chip" onclick="addX(st.bal)">Всё</button><button class="chip" onclick="selAll()">Все скины</button><button class="chip x" onclick="clr()">Сбросить</button></div></div>
   <div class="sec"><h2>Твои скины в ставку</h2>${stakeCards}</div>
   <div class="sec"><h2>Что хочешь получить · быстрый шанс</h2><div class="chips" style="margin-bottom:10px">${[.01,1,10,25,35,50,55,75].map(x=>`<button class="chip" onclick="setCh(${x})">${x}%</button>`).join("")}</div>${tg?`<div class="row">${tg}</div>`:`<div class="empty">Нет скинов дороже такой ставки</div>`}</div>
-  <button class="go" id="gob" onclick="spin()" ${err||busy?"disabled":""}>Апгрейд</button><div class="hint">${busy?"Крутим…":err}</div>`}
+  `}
 function go(t){if(busy)return;tab=t;render();scrollTo(0,0)}
 function tog(u){if(busy)return;sel.has(u)?sel.delete(u):sel.add(u);fix();render()}
 function pick(i){if(busy)return;target=target===i?null:i;render()}
@@ -174,7 +187,7 @@ function spin(){
     if(win){st.inv.push({uid:st.uid++,id:tid,s:[]});target=null}
     res={win,id:tid};save();render();bump();
     const wb=document.getElementById("wb");wb.classList.add(win?"win":"lose");
-    toast(win?"Победа! +"+SK[tid].n:"Не повезло");
+    toast(win?"Победа! +"+SK[tid].n:"Не повезло");try{navigator.vibrate&&navigator.vibrate(win?[60,40,60]:120)}catch(e){}
   },4700);
 }
 
@@ -196,7 +209,7 @@ const itemVal=i=>SK[i.id].p+Math.round(.5*(i.s||[]).reduce((a,k)=>a+STK[k].p,0))
 const iv=i=>({...SK[i.id],p:itemVal(i),st:i.s||[]});
 const tgList=()=>{const v=stakeVal();return v?RK.filter(s=>s.p>v&&v/s.p*EDGE>=.0001):RK.slice(0,40)};
 const pct=p=>{const x=p*100;return(x>=10?x.toFixed(0):x>=1?x.toFixed(1):x.toFixed(2))+"%"};
-function navR(){document.getElementById("balv").textContent=fmt(st.bal);document.getElementById("me").innerHTML=av(st.pf)+"<b>"+esc(nick())+"</b>";const pv=document.getElementById("pv");if(pv)pv.innerHTML=pvH();document.getElementById("nav").innerHTML=[["up","Апгрейд"],["case","Кейсы"],["shop","Магазин"],["inv","Скины · "+st.inv.length]].map(([k,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
+function navR(){document.getElementById("balv").textContent=fmt(st.bal);document.getElementById("me").innerHTML=av(st.pf)+"<b>"+esc(nick())+"</b>";const pv=document.getElementById("pv");if(pv)pv.innerHTML=pvH();document.getElementById("nav").innerHTML=[["up","⚡","Апгрейд"],["case","📦","Кейсы"],["shop","🛒","Магазин"],["inv","🎒","Скины "+st.inv.length]].map(([k,i,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')"><span class="ni">${i}</span>${l}</button>`).join("")}
 function render(){navR();document.getElementById("main").innerHTML=tab==="up"?vUp():tab==="pf"?vPf():tab==="case"?vCase():tab==="shop"?vShop():vInv()}
 const stkCard=(k,x,c)=>{const s=STK[k];return `<button class="card ${ss===x?"sel":""}" style="flex:0 0 96px" onclick="${c}"><div class="art sa${st.im["s"+k]?" ph":""}" style="--h:${k*37%360};height:56px;display:grid;place-items:center;font-size:30px${st.im["s"+k]?`;--im:url(${st.im["s"+k]})`:""}"><span style="position:relative;z-index:1">${st.im["s"+k]?"":s.e}</span></div><div class="nm">${s.n}</div><div class="pr"><i>◈</i> ${fmt(s.p)}</div><div class="rar ${rar(s.p)}"></div></button>`};
 function shopGrid(){const l=SK.filter(s=>s.n.toLowerCase().includes(q.toLowerCase())).sort((a,b)=>a.p-b.p);return `<div class="grid">${l.slice(0,lim).map(s=>card(s,{extra:`<button class="btn buy" ${st.bal<s.p?"disabled":""} onclick="buy(${s.id})">Купить</button>`})).join("")}</div>${l.length>lim?`<button class="btn" style="padding:12px" onclick="lim+=24;document.getElementById('sg').innerHTML=shopGrid()">Показать ещё</button>`:l.length?"":`<div class="empty">Ничего не найдено</div>`}`}
@@ -257,6 +270,8 @@ function setCh(x){if(busy)return;const v=stakeVal();if(!v){toast("Сначала
 
 function giveStart(){if(st.fresh){STARTERS.forEach(id=>st.inv.push({uid:st.uid++,id,s:[]}));delete st.fresh;save()}}
 giveStart();
+
+function selAll(){if(busy)return;st.inv.forEach(i=>sel.add(i.uid));fix();render()}
 render();
 </script>
 </body>
