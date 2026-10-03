@@ -349,7 +349,7 @@ function mpList(){
   const ob=BT.filter(b=>b.state==="open"&&CB[b.ci]).sort((a,b)=>b.t-a.t).map(b=>`<div class="row2"><div><b>${esc(b.hn||"Игрок")}</b><small>${CB[b.ci].n} · ◈ ${fmt(b.price)}</small></div>${b.host===ME?`<button class="chip x" data-i="${esc(b.id)}" onclick="cancelBattle(this.dataset.i)">Отменить</button>`:`<button class="chip on" data-i="${esc(b.id)}" onclick="joinBattle(this.dataset.i)">Вступить</button>`}</div>`).join("")||`<div class="empty">Открытых баттлов нет. Создай первый!</div>`;
   const ot=TR.filter(t=>t.state==="open"&&SK[t.skin]).sort((a,b)=>b.t-a.t).map(t=>`<div class="row2"><div><b>${esc(SK[t.skin].n)} ${(t.stk||[]).filter(k=>STK[k]).map(k=>STK[k].e).join("")}</b><small>${esc(t.sn||"Игрок")} · цена ◈ ${fmt(t.ask)} (рынок ◈ ${fmt(SK[t.skin].p)})</small></div>${t.seller===ME?`<button class="chip x" data-i="${esc(t.id)}" onclick="cancelTrade(this.dataset.i)">Снять</button>`:`<button class="chip on" data-i="${esc(t.id)}" onclick="buyTrade(this.dataset.i)">Купить</button>`}</div>`).join("")||`<div class="empty">На рынке пока пусто</div>`;
   return `${rb}<h2>Открытые баттлы</h2>${ob}<h2 style="margin-top:20px">Рынок трейдов</h2>${ot}`}
-function vMp(){if(!DB)return `<div class="sec"><div class="empty">Онлайн-режим работает в опубликованной версии по ссылке на артефакт, когда ты вошёл в аккаунт. В скачанном файле и на GitHub игра одиночная.</div></div>`;
+function vMp(){if(!DB)return `<div class="sec"><div class="empty">Подключаемся к онлайну… Если не загрузилось, проверь интернет и обнови страницу.</div></div>`;
   return `<div class="sec"><h2>Создать баттл</h2><select class="srch" id="bsel">${CB.map((c,i)=>`<option value="${i}">${c.n} · ◈ ${fmt(c.price)}</option>`).join("")}</select><button class="go" style="margin-top:0" onclick="mkBattle()">Создать баттл</button><p class="hint" style="text-align:left">Оба открывают один кейс. У кого скин дороже, тот забирает оба.</p></div>
 <div class="sec"><h2>Выставить скин на трейд</h2>${st.inv.length?`<select class="srch" id="tsel">${st.inv.map(i=>`<option value="${i.uid}">${esc(SK[i.id].n)} · ◈ ${fmt(itemVal(i))}</option>`).join("")}</select><input class="srch" id="task" type="number" min="1" placeholder="Цена в монетах"><button class="go" style="margin-top:0" onclick="mkTrade()">Выставить на трейд</button>`:`<div class="empty">В инвентаре нет скинов</div>`}</div><div class="sec" id="mpl">${mpList()}</div>`}
 async function mkBattle(){const c=CB[+document.getElementById("bsel").value],ci=CB.indexOf(c);if(!DB)return;if(st.bal<c.price){toast("Не хватает монет");return}
@@ -377,6 +377,27 @@ function openFree(){if(busy||fcd(fs))return;const sk=fs>=5,fc=sk?FSK[fs-5]:null,
   crateFall(()=>rollStrip(Array.from({length:46},(_,i)=>i===WI?(sk?cellH(win):coinCell(win)):(sk?cellH(pickFrom(fc)):coinCell(rollCoin(m)))),WI,()=>{busy=false;st.fc=st.fc||{};st.fc[fs]=Date.now();if(sk){st.inv.push({uid:st.uid++,id:win.id,s:[]});fdrop=win;toast("Выпало: "+win.n)}else{st.bal+=win;fres=win;toast("+ ◈ "+win)}save();render();bump()}))}
 render();
 mpInit();
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,doc,addDoc,getDoc,updateDoc,deleteDoc,onSnapshot,query,limit,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+try{
+  const app=initializeApp({apiKey:"AIzaSyBcqnbPQRlWz7YcmGYEkuk9RFsPSC4LatM",authDomain:"neon-drop-49ce4.firebaseapp.com",projectId:"neon-drop-49ce4",storageBucket:"neon-drop-49ce4.firebasestorage.app",messagingSenderId:"848555797182",appId:"1:848555797182:web:e46cf3cd1c49d93bf50cef"});
+  const fs=getFirestore(app),uid=(await signInAnonymously(getAuth(app))).user.uid;
+  const sd=d=>({id:d.id,exists:d.exists(),data:()=>d.data()});
+  const DBx={
+    collection:name=>({
+      limit:n=>({onSnapshot:(cb,er)=>onSnapshot(query(collection(fs,name),limit(n)),s=>cb({docs:s.docs.map(sd)}),er)}),
+      add:d=>addDoc(collection(fs,name),d)}),
+    doc:path=>{const r=doc(fs,path);return{
+      get:async()=>sd(await getDoc(r)),
+      update:d=>updateDoc(r,d),
+      delete:()=>deleteDoc(r),
+      acquire:async o=>({acquired:await runTransaction(fs,async tx=>{const s=await tx.get(r),d=s.exists()?s.data():{};if(d.lockUntil>Date.now()&&d.lockBy!==o.holder)return false;if(s.exists())tx.update(r,{lockBy:o.holder,lockUntil:Date.now()+(o.ttlMs||5000)});return true})})}}};
+  window.claude={use:async k=>k==="user"?{id:async()=>uid}:k==="db"?DBx:null};
+  if(window.mpInit)window.mpInit();
+}catch(e){console.warn("Онлайн недоступен:",e)}
 </script>
 </body>
 </html>
