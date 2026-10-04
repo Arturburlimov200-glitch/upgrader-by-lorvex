@@ -162,12 +162,15 @@ body{background:radial-gradient(900px 420px at 50% -120px,rgba(25,255,140,.14),t
 .fi b{display:block;font-size:11px;white-space:nowrap}.fi small{display:block;color:var(--mu);font-size:10px;white-space:nowrap}
 .fm{width:42px;height:30px;flex:none;border-radius:7px}.fm:after{inset:4px 3px}
 .feed-empty{color:var(--mu);font-size:12px;white-space:nowrap}
+.art.w6:after,.art.w8:after,.art.w9:after,.art.w10:after,.art.w11:after,.art.w12:after{inset:14px 16%}
+.art.w7:after,.art.w13:after,.art.w14:after,.art.w15:after{inset:8px 33%}
+.fm.art:after{inset:4px 4px!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="feed" id="feed"><div class="onl" id="onl"></div><div class="mqw" id="mqw"></div></div>
+  <div class="feed" id="feed"><div class="onl" id="onl" onclick="go('mp')"></div><div class="mqw" id="mqw"></div></div>
   <div class="sign"><span>NEON</span><span>DROP</span></div>
   <header><button class="me" id="me" onclick="go('pf')" aria-label="Профиль"></button><div class="bal" id="bal"><i>◈</i><span id="balv">0</span></div></header>
   <main id="main"></main>
@@ -212,7 +215,7 @@ function addX(v){if(busy)return;extra=Math.min(st.bal,extra+v);fix();render()}
 function clr(){if(busy)return;sel.clear();extra=0;render()}
 function fix(){if(target!==null&&SK[target].p<=stakeVal())target=null;res=null}
 function buy(id){const s=SK[id];if(st.bal<s.p)return;st.bal-=s.p;st.inv.push({uid:st.uid++,id,s:[]});save();render();bump();toast("Куплено: "+s.n)}
-let rc=0;function resetAll(){if(!rc){rc=1;toast("Нажми ещё раз, чтобы сбросить всё");setTimeout(()=>rc=0,3000);return}rc=0;st={bal:1000,inv:[],uid:1,stk:[],pf:st.pf,im:st.im,fresh:1};giveStart();sel.clear();extra=0;target=null;res=null;save();render()}
+let rc=0;function resetAll(){if(!rc){rc=1;toast("Нажми ещё раз, чтобы сбросить всё");setTimeout(()=>rc=0,3000);return}rc=0;st={bal:1000,inv:[],uid:1,stk:[],pf:st.pf,im:st.im,pm:st.pm,fresh:1};giveStart();sel.clear();extra=0;target=null;res=null;save();render()}
 function spin(){
   if(busy||check())return;
   const p=chance(),tid=target,stk=stakeVal();busy=true;res=null;
@@ -244,24 +247,34 @@ for(const [n,t] of [["Новичок · Пистолет",3],["Новичок ·
 const rd=(p,k)=>{const d=Math.pow(10,Math.floor(Math.log10(p))-(k-1));return Math.round(p/d)*d};
 for(let t=8;t<16;t++){const ws=[...W].sort(()=>r()-.5).slice(0,9);for(const w of ws)SK.push({id:SK.length,n:w+" · "+N[t],p:rd(500*Math.pow(6000,r()),2),h:Math.floor(r()*360),t})}
 for(let t=0;t<16;t++)for(let j=0;j<4;j++)SK.push({id:SK.length,n:C[j]+" · "+N[t],p:Math.max(5,Math.round((5+r()*45)/5)*5),h:Math.floor(r()*360),t})})();
+(()=>{const N=["Автомат","Винтовка","Снайперка","Пистолет","Дробовик","ПП","Клинок","Перчатки","Коготь","Складной нож","Танто","Охотничий нож","Стилет","Боевые перчатки","Спортивные перчатки","Рукавицы"],W=["Аметист","Бирюза","Вихрь","Горгона","Дельта","Егерь","Жемчуг","Закат","Искра","Каньон","Лотос","Маяк","Нептун","Орёл","Пантера","Ривьера","Сокол","Торнадо","Ультрамарин","Фантом","Хамелеон","Цунами","Чародей","Шторм","Эхо","Юпитер","Ягуар","Корсар","Мистраль","Призма"];let x=101;const r=()=>(x=x*16807%2147483647)/2147483647;
+const rd=(p,k)=>{const d=Math.pow(10,Math.floor(Math.log10(p))-(k-1));return Math.round(p/d)*d};
+for(let t=0;t<16;t++){const ws=[...W].sort(()=>r()-.5);
+  for(const w of ws.slice(0,14))SK.push({id:SK.length,n:w+" · "+N[t],p:Math.min(9.99e6,rd(2000*Math.pow(4995,r()),3)),h:Math.floor(r()*360),t});
+  for(const w of ws.slice(14,20))SK.push({id:SK.length,n:w+" · "+N[t],p:rd(100*Math.pow(50,r()),2),h:Math.floor(r()*360),t})}
+SK.push({id:SK.length,n:"Абсолютный Король · Клинок",p:9990000,h:55,t:6});
+SK.push({id:SK.length,n:"Платиновый Эксклюзив · Клинок",p:3e7,h:160,t:6,x:1});
+SK.push({id:SK.length,n:"Пыль · Пистолет",p:2,h:0,t:3,x:1})})();
+const JACK=SK.find(s=>s.n==="Платиновый Эксклюзив · Клинок"),DUST=SK.find(s=>s.n==="Пыль · Пистолет");
 const STK=[["🔥","Огонь",40],["💎","Алмаз",300],["👑","Корона",1200],["🎯","Мишень",60],["🐺","Волк",150],["⚡","Молния",90],["🦄","Единорог",800],["💀","Череп",220],["🍀","Клевер",35],["🚀","Ракета",500],["🌙","Луна",120],["🧊","Лёд",70],["🐉","Дракон",2500],["⭐","Звезда",180],["🎲","Кости",45],["🦅","Орёл",350],["🌋","Вулкан",650],["🪐","Планета",1600],["🍄","Гриб",30],["🕶️","Очки",110],["🧿","Талисман",420],["🏆","Кубок",3000]].map((a,i)=>({id:i,e:a[0],n:a[1],p:a[2]}));
 SK.forEach((k,i)=>{if(k.t===undefined)k.t=i%8});
-const RK=[...SK].sort((a,b)=>a.p-b.p);
+const RK=SK.filter(s=>!s.x).sort((a,b)=>a.p-b.p);
 const hu=(a,b)=>RK.filter(s=>a<=b?s.h>=a&&s.h<=b:(s.h>=a||s.h<=b));
 const ty=t=>RK.filter(s=>s.t===t);
 const pr=(a,b)=>RK.filter(s=>s.p>=a&&s.p<=b),KN=s=>s.t===6||(s.t>=8&&s.t<=12),GL=s=>s.t===7||s.t>=13;
-const CB=[["Рассвет",20,pr(0,120),1],["Тайга",150,pr(60,400),1],["Мираж",280,pr(250,1500),1],["Бархат",320,pr(1000,6000),1],["Метеор",45,pr(4000,60000),1],["Арсенал",200,RK.filter(s=>s.t<2),1],["Снайперы",160,ty(2),1],["Пистолеты",30,ty(3),1],["Дробь",10,ty(4),1],["Спринт",250,ty(5),1],["Ножи",340,RK.filter(KN),1],["Перчатки",300,RK.filter(GL),1],["Все подряд",120,RK,1],["Рискованный",0,RK,2],["Золотой",48,RK.slice(-40),1],["Копилка",90,pr(0,60),1],["Багровый",355,hu(340,20),1],["Ледяной",195,hu(170,250),1],["Лесной",120,hu(80,160),1],["Безопасный",230,pr(120,3000),.5],["Ножи VIP",48,RK.filter(s=>KN(s)&&s.p>=20000),1],["Перчатки VIP",150,RK.filter(s=>GL(s)&&s.p>=20000),1]].map(a=>{const pool=a[2],e=a[3],ws=pool.map(s=>Math.pow(s.p,-e)),W=ws.reduce((x,y)=>x+y,0),ev=pool.reduce((x,s,i)=>x+s.p*ws[i],0)/W;return{n:"Кейс «"+a[0]+"»",pool,ws,W,h:a[1],price:Math.max(10,Math.round(ev*1.12/10)*10)}});
+const CB=[["Рассвет",20,pr(0,120),1],["Тайга",150,pr(60,400),1],["Мираж",280,pr(250,1500),1],["Бархат",320,pr(1000,6000),1],["Метеор",45,pr(4000,60000),1],["Арсенал",200,RK.filter(s=>s.t<2),1],["Снайперы",160,ty(2),1],["Пистолеты",30,ty(3),1],["Дробь",10,ty(4),1],["Спринт",250,ty(5),1],["Ножи",340,RK.filter(KN),1],["Перчатки",300,RK.filter(GL),1],["Все подряд",120,RK,1],["Рискованный",0,RK,2],["Золотой",48,RK.slice(-40),1],["Копилка",90,pr(0,60),1],["Багровый",355,hu(340,20),1],["Ледяной",195,hu(170,250),1],["Лесной",120,hu(80,160),1],["Безопасный",230,pr(120,3000),.5],["Ножи VIP",48,RK.filter(s=>KN(s)&&s.p>=20000),1],["Перчатки VIP",150,RK.filter(s=>GL(s)&&s.p>=20000),1],["Джекпот 30кк",48,[DUST,JACK],1,5e6,[99,1]]].map(a=>{const pool=a[2],e=a[3],ws=a[5]||pool.map(s=>Math.pow(s.p,-e)),W=ws.reduce((x,y)=>x+y,0),ev=pool.reduce((x,s,i)=>x+s.p*ws[i],0)/W;return{n:"Кейс «"+a[0]+"»",pool,ws,W,h:a[1],price:a[4]||Math.max(10,Math.round(ev*1.12/10)*10)}});
 const FSK=[["Стволы",s=>[0,1,4].includes(s.t)],["Лёгкое",s=>[2,5].includes(s.t)],["Пистолеты",s=>s.t===3],["Ножи",KN],["Перчатки",GL]].map(a=>{const pool=pr(0,50).filter(a[1]),ws=pool.map(s=>Math.pow(s.p,-.5)),W=ws.reduce((x,y)=>x+y,0);return{n:"Бесплатный · "+a[0],pool,ws,W,h:0}});
 let fdrop=null,cat="";
 let cs=null,drop=null,ss=null,q="",lim=24;
 const itemVal=i=>SK[i.id].p+Math.round(.5*(i.s||[]).reduce((a,k)=>a+STK[k].p,0));
 const iv=i=>({...SK[i.id],p:itemVal(i),st:i.s||[]});
-const tgList=()=>{const v=stakeVal();return v?RK.filter(s=>s.p>v&&v/s.p*EDGE>=.0001):RK.slice(0,40)};
+const tgAll=()=>{const v=stakeVal();return v?RK.filter(s=>s.p>v&&v/s.p*EDGE>=.0001):RK.slice(0,40)};
+const tgList=()=>{const a=tgAll();if(a.length<=150)return a;const k=a.length/150,o=Array.from({length:150},(_,i)=>a[Math.floor(i*k)]);if(target!==null&&SK[target]&&!o.some(s=>s.id===target)){o.push(SK[target]);o.sort((x,y)=>x.p-y.p)}return o};
 const pct=p=>{const x=p*100;return(x>=10?x.toFixed(0):x>=1?x.toFixed(1):x.toFixed(2))+"%"};
 function navR(){document.getElementById("balv").textContent=fmt(st.bal);document.getElementById("me").innerHTML=av(st.pf)+"<b>"+esc(nick())+"</b>";const pv=document.getElementById("pv");if(pv)pv.innerHTML=pvH();document.getElementById("nav").innerHTML=[["up","⚡","Апгрейд"],["case","📦","Кейсы"],["mp","🌐","Онлайн"],["shop","🛒","Магазин"],["inv","🎒","Скины "+st.inv.length]].map(([k,i,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')"><span class="ni">${i}</span>${l}</button>`).join("")}
 function render(){navR();document.getElementById("main").innerHTML=tab==="up"?vUp():tab==="mp"?vMp():tab==="pf"?vPf():tab==="case"?vCase():tab==="shop"?vShop():vInv()}
 const stkCard=(k,x,c)=>{const s=STK[k];return `<button class="card ${ss===x?"sel":""}" style="flex:0 0 96px" onclick="${c}"><div class="art sa${st.im["s"+k]?" ph":""}" style="--h:${k*37%360};height:56px;display:grid;place-items:center;font-size:30px${st.im["s"+k]?`;--im:url(${st.im["s"+k]})`:""}"><span style="position:relative;z-index:1">${st.im["s"+k]?"":s.e}</span></div><div class="nm">${s.n}</div><div class="pr"><i>◈</i> ${fmt(s.p)}</div><div class="rar ${rar(s.p)}"></div></button>`};
-function shopGrid(){const l=SK.filter(s=>s.n.toLowerCase().includes(q.toLowerCase())&&(cat==="k"?KN(s):cat==="g"?GL(s):cat==="w"?!KN(s)&&!GL(s):true)).sort((a,b)=>a.p-b.p);return `<div class="grid">${l.slice(0,lim).map(s=>card(s,{extra:`<button class="btn buy" ${st.bal<s.p?"disabled":""} onclick="buy(${s.id})">Купить</button>`})).join("")}</div>${l.length>lim?`<button class="btn" style="padding:12px" onclick="lim+=24;document.getElementById('sg').innerHTML=shopGrid()">Показать ещё</button>`:l.length?"":`<div class="empty">Ничего не найдено</div>`}`}
+function shopGrid(){const l=SK.filter(s=>!s.x&&s.n.toLowerCase().includes(q.toLowerCase())&&(cat==="k"?KN(s):cat==="g"?GL(s):cat==="w"?!KN(s)&&!GL(s):true)).sort((a,b)=>a.p-b.p);return `<div class="grid">${l.slice(0,lim).map(s=>card(s,{extra:`<button class="btn buy" ${st.bal<s.p?"disabled":""} onclick="buy(${s.id})">Купить</button>`})).join("")}</div>${l.length>lim?`<button class="btn" style="padding:12px" onclick="lim+=24;document.getElementById('sg').innerHTML=shopGrid()">Показать ещё</button>`:l.length?"":`<div class="empty">Ничего не найдено</div>`}`}
 function vShop(){return `<div class="sec"><h2>Наклейки · нажми, чтобы купить</h2><div class="row">${STK.map(s=>stkCard(s.id,-1,`buyS(${s.id})`)).join("")}</div></div><div class="sec"><h2>Скины · ${SK.length}</h2><div class="chips" style="margin-bottom:10px">${[["","Все"],["w","Оружие"],["k","Ножи"],["g","Перчатки"]].map(([k,l])=>`<button class="chip ${cat===k?"on":""}" onclick="cat='${k}';lim=24;render()">${l}</button>`).join("")}</div><input class="srch" placeholder="Поиск по названию" value="${q.replace(/"/g,"&quot;")}" oninput="q=this.value;lim=24;document.getElementById('sg').innerHTML=shopGrid()"><div id="sg">${shopGrid()}</div></div>`}
 function vInv(){
   const stk=st.stk.length?`<div class="row">${st.stk.map((k,x)=>stkCard(k,x,`selS(${x})`)).join("")}</div>`:`<div class="empty">Наклеек нет. Купи их в магазине.</div>`;
@@ -285,7 +298,7 @@ function vPf(){const p=st.pf;return `<div class="sec"><div id="pv">${pvH()}</div
 <h2>Иконка</h2><div class="avg">${EM.map(e=>`<button class="eb ${p.e===e&&!p.img?"sel":""}" onclick="setEm('${e}')">${e}</button>`).join("")}</div>
 <h2>Цвет фона</h2><input type="range" class="rg" min="0" max="359" value="${p.c}" oninput="setHue(this.value)">
 <h2>Своё фото</h2><div class="chips"><label class="chip" for="upf">Загрузить фото</label><input type="file" id="upf" accept="image/*" hidden onchange="upImg(this)">${p.img?`<button class="chip x" onclick="rmImg()">Убрать фото</button>`:""}</div>
-<h2 style="margin-top:20px">Свои картинки для предметов</h2><p class="hint" style="text-align:left;margin:0 0 12px">Нажми на плитку и выбери своё фото. Оно заменит рисунок у всех предметов этого типа.</p>${slots("Оружие",TN.map((n,i)=>["w"+i,n,"art w"+i,i*45]))}${slots("Кейсы",CB.map((c,i)=>["c"+i,c.n.replace("Кейс ",""),"art cr",c.h]))}${slots("Наклейки",STK.map(k=>["s"+k.id,k.n,"art sa",k.id*37%360]))}${Object.keys(st.im).length?`<button class="chip x" onclick="st.im={};save();render()">Вернуть все рисунки</button>`:""}<button class="go" onclick="go('up')">Готово</button></div>`}
+<h2 style="margin-top:20px">Промокод</h2><input class="srch" id="pcode" maxlength="24" placeholder="Введи промокод" style="margin-bottom:8px;text-transform:uppercase"><button class="go" style="margin-top:0" onclick="usePromo()">Активировать</button><p class="hint" style="text-align:left">Каждый промокод можно использовать один раз на аккаунт.</p><h2 style="margin-top:20px">Свои картинки для предметов</h2><p class="hint" style="text-align:left;margin:0 0 12px">Нажми на плитку и выбери своё фото. Оно заменит рисунок у всех предметов этого типа.</p>${slots("Оружие",TN.map((n,i)=>["w"+i,n,"art w"+i,i*45]))}${slots("Кейсы",CB.map((c,i)=>["c"+i,c.n.replace("Кейс ",""),"art cr",c.h]))}${slots("Наклейки",STK.map(k=>["s"+k.id,k.n,"art sa",k.id*37%360]))}${Object.keys(st.im).length?`<button class="chip x" onclick="st.im={};save();render()">Вернуть все рисунки</button>`:""}<button class="go" onclick="go('up')">Готово</button></div>`}
 function setNick(v){st.pf.n=String(v).slice(0,16);save();navR()}
 function setEm(e){st.pf.e=e;st.pf.img="";save();render()}
 function setHue(v){st.pf.c=+v;save();navR()}
@@ -300,7 +313,7 @@ function upIm(k,inp){const f=inp.files&&inp.files[0];if(!f)return;if(f.size>10e6
   const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{try{const c=document.createElement("canvas");c.width=256;c.height=144;const r=Math.max(256/im.width,144/im.height),w=im.width*r,h=im.height*r;c.getContext("2d").drawImage(im,(256-w)/2,(144-h)/2,w,h);st.im[k]=c.toDataURL("image/jpeg",.8);save();render();toast("Картинка установлена")}catch(e){toast("Не удалось загрузить")}};im.onerror=()=>toast("Это не картинка");im.src=rd.result};rd.readAsDataURL(f)}
 
 function setCh(x){if(busy)return;const v=stakeVal();if(!v){toast("Сначала добавь ставку");return}
-  const c=tgList();if(!c.length){toast("Нет подходящих скинов");return}
+  const c=tgAll();if(!c.length){toast("Нет подходящих скинов");return}
   let b=c[0],bd=1e9;for(const s of c){const ch=Math.min(.9,v/s.p*EDGE)*100,d=Math.abs(Math.log(ch/x));if(d<bd){bd=d;b=s}}
   target=b.id;res=null;render();toast("Шанс "+pct(chance()));const e=document.querySelector(".card.sel[onclick^='pick']");if(e)e.scrollIntoView({inline:"center",block:"nearest"})}
 
@@ -335,8 +348,8 @@ const resH=()=>{if(!res)return"";if(res.shake)return `<div class="res"><div clas
   return `<div class="res lose"><div><h3>Не повезло</h3><p>Утешительный приз: ◈ ${fmt(res.prize||0)}</p></div></div>`};
 function mystery(){if(busy)return;const v=stakeVal();if(!v){toast("Добавь ставку");return}
   busy=true;st.bal-=extra;st.inv=st.inv.filter(i=>!sel.has(i.uid));
-  const r=Math.random(),m=r<.5?.35+Math.random()*.55:r<.8?.9+Math.random()*.4:r<.95?1.3+Math.random()*1.7:3+Math.random()*7,T=v*m;
-  const c=RK.slice().sort((a,b)=>Math.abs(Math.log(a.p/T))-Math.abs(Math.log(b.p/T))).slice(0,4),w=c[Math.floor(Math.random()*c.length)];
+  const r=Math.random(),m=st.mp?1.3+Math.random()*(r<.8?1.7:8.7):(r<.5?.35+Math.random()*.55:r<.8?.9+Math.random()*.4:r<.95?1.3+Math.random()*1.7:3+Math.random()*7),T=v*m;
+  const c=(st.mp&&RK.some(s=>s.p>v)?RK.filter(s=>s.p>v):RK).slice().sort((a,b)=>Math.abs(Math.log(a.p/T))-Math.abs(Math.log(b.p/T))).slice(0,4),w=c[Math.floor(Math.random()*c.length)];
   res={shake:1};target=null;navR();render();
   setTimeout(()=>{busy=false;sel.clear();extra=0;st.inv.push({uid:st.uid++,id:w.id,s:[]});pubDrop(w,"mys");res={mys:1,id:w.id,m:w.p/v};save();render();bump();toast("Мистери: "+w.n);try{navigator.vibrate&&navigator.vibrate([40,30,40])}catch(e){}},2200)}
 /* ---- онлайн: баттлы и трейды ---- */
@@ -344,9 +357,9 @@ let DB=null,ME=null,BT=[],TR=[],bres=null;
 const mul=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
 const pickR=(c,rnd)=>{let r=rnd()*c.W;for(let i=0;i<c.pool.length;i++){r-=c.ws[i];if(r<=0)return c.pool[i]}return c.pool[0]};
 async function mpInit(){try{const c=window.claude;if(!c||!c.use)return;const u=await c.use("user"),d=await c.use("db");if(!d||!u)return;const id=await u.id();if(!id)return;DB=d;ME=id;
-  DB.collection("battles").limit(80).onSnapshot(s=>{BT=s.docs.map(x=>({id:x.id,...x.data()}));mpSync()},()=>{});
-  DB.collection("trades").limit(80).onSnapshot(s=>{TR=s.docs.map(x=>({id:x.id,...x.data()}));mpSync()},()=>{});
-  liveInit();onlR();feedRender();if(tab==="mp")render()}catch(e){DB=null}}
+  DB.collection("battles").limit(80).onSnapshot(s=>{BT=s.docs.map(x=>({id:x.id,...x.data()}));mpSync()},e=>onlFail(e&&e.code));
+  DB.collection("trades").limit(80).onSnapshot(s=>{TR=s.docs.map(x=>({id:x.id,...x.data()}));mpSync()},e=>onlFail(e&&e.code));
+  try{liveInit()}catch(e){}onlR();feedRender();if(tab==="mp")render()}catch(e){DB=null}}
 function mpSync(){st.bd=st.bd||[];st.ta=st.ta||[];let ch=0;
   for(const b of BT){if(b.state==="done"&&(b.host===ME||b.guest===ME)&&CB[b.ci]&&!st.bd.includes(b.id)){st.bd.push(b.id);if(st.bd.length>80)st.bd.shift();
     const c=CB[b.ci],rnd=mul(b.seed|0),dh=pickR(c,rnd),dg=pickR(c,rnd),won=(dh.p>=dg.p)===(b.host===ME);
@@ -361,8 +374,8 @@ function mpList(){
   const ob=BT.filter(b=>b.state==="open"&&CB[b.ci]).sort((a,b)=>b.t-a.t).map(b=>`<div class="row2"><div><b>${esc(b.hn||"Игрок")}</b><small>${CB[b.ci].n} · ◈ ${fmt(b.price)}</small></div>${b.host===ME?`<button class="chip x" data-i="${esc(b.id)}" onclick="cancelBattle(this.dataset.i)">Отменить</button>`:`<button class="chip on" data-i="${esc(b.id)}" onclick="joinBattle(this.dataset.i)">Вступить</button>`}</div>`).join("")||`<div class="empty">Открытых баттлов нет. Создай первый!</div>`;
   const ot=TR.filter(t=>t.state==="open"&&SK[t.skin]).sort((a,b)=>b.t-a.t).map(t=>`<div class="row2"><div><b>${esc(SK[t.skin].n)} ${(t.stk||[]).filter(k=>STK[k]).map(k=>STK[k].e).join("")}</b><small>${esc(t.sn||"Игрок")} · цена ◈ ${fmt(t.ask)} (рынок ◈ ${fmt(SK[t.skin].p)})</small></div>${t.seller===ME?`<button class="chip x" data-i="${esc(t.id)}" onclick="cancelTrade(this.dataset.i)">Снять</button>`:`<button class="chip on" data-i="${esc(t.id)}" onclick="buyTrade(this.dataset.i)">Купить</button>`}</div>`).join("")||`<div class="empty">На рынке пока пусто</div>`;
   return `${rb}<h2>Открытые баттлы</h2>${ob}<h2 style="margin-top:20px">Рынок трейдов</h2>${ot}`}
-function vMp(){if(!DB)return `<div class="sec"><div class="empty">Онлайн-режим работает в опубликованной версии по ссылке на артефакт, когда ты вошёл в аккаунт. В скачанном файле и на GitHub игра одиночная.</div></div>`;
-  return `<div class="sec"><h2>Создать баттл</h2><select class="srch" id="bsel">${CB.map((c,i)=>`<option value="${i}">${c.n} · ◈ ${fmt(c.price)}</option>`).join("")}</select><button class="go" style="margin-top:0" onclick="mkBattle()">Создать баттл</button><p class="hint" style="text-align:left">Оба открывают один кейс. У кого скин дороже, тот забирает оба.</p></div>
+function vMp(){if(!DB)return `<div class="sec"><div class="empty">${onlMsg()}</div></div>`;
+  return `${ONLERR?`<div class="empty" style="margin-bottom:12px">${onlMsg()}</div>`:""}<div class="sec"><h2>Создать баттл</h2><select class="srch" id="bsel">${CB.map((c,i)=>`<option value="${i}">${c.n} · ◈ ${fmt(c.price)}</option>`).join("")}</select><button class="go" style="margin-top:0" onclick="mkBattle()">Создать баттл</button><p class="hint" style="text-align:left">Оба открывают один кейс. У кого скин дороже, тот забирает оба.</p></div>
 <div class="sec"><h2>Выставить скин на трейд</h2>${st.inv.length?`<select class="srch" id="tsel">${st.inv.map(i=>`<option value="${i.uid}">${esc(SK[i.id].n)} · ◈ ${fmt(itemVal(i))}</option>`).join("")}</select><input class="srch" id="task" type="number" min="1" placeholder="Цена в монетах"><button class="go" style="margin-top:0" onclick="mkTrade()">Выставить на трейд</button>`:`<div class="empty">В инвентаре нет скинов</div>`}</div><div class="sec" id="mpl">${mpList()}</div>`}
 async function mkBattle(){const c=CB[+document.getElementById("bsel").value],ci=CB.indexOf(c);if(!DB)return;if(st.bal<c.price){toast("Не хватает монет");return}
   st.bal-=c.price;save();navR();
@@ -395,16 +408,57 @@ function feedRender(){const el=document.getElementById("mqw");if(!el)return;
   const src=[...(DB?FEED:[]),...LOC].filter(d=>d&&SK[d.sk]).sort((a,b)=>b.t-a.t).slice(0,25);
   const it=src.map(d=>{const s=SK[d.sk];return `<div class="fi" style="border-color:var(--r${rar(s.p).slice(1)})"><div ${ia("w"+s.t,s.h,"art w"+s.t+" fm")}></div><div><b>${esc(String(d.n||"Игрок").slice(0,16))}</b><small>${esc(s.n)} · ◈ ${fmt(s.p)}</small></div></div>`}).join("");
   el.innerHTML=it?`<div class="mq" style="animation-duration:${Math.max(24,src.length*5)}s">${it}${it}</div>`:`<span class="feed-empty">Здесь появятся выпавшие скины всех игроков</span>`}
-const onlR=()=>{const e=document.getElementById("onl");if(e)e.innerHTML=`<i class="dot"></i>${DB?ONL+" онлайн":"офлайн"}`};
+const onlR=()=>{const e=document.getElementById("onl");if(e)e.innerHTML=`<i class="dot"></i>${ONLERR?"ошибка":DB?ONL+" онлайн":"офлайн"}`};
 function countOnl(){const n=Date.now();ONL=Math.max(1,PR.filter(x=>x.t>n-60000).length);PR.filter(x=>x.t<n-300000).slice(0,5).forEach(x=>DB.doc("presence/"+x.id).delete().catch(()=>{}));onlR()}
 function liveInit(){
-  DB.collection("drops").orderBy("t","desc").limit(25).onSnapshot(s=>{FEED=s.docs.map(x=>x.data());feedRender()},()=>{});
+  DB.collection("drops").orderBy("t","desc").limit(25).onSnapshot(s=>{FEED=s.docs.map(x=>x.data());feedRender()},e=>onlFail(e&&e.code));
   const beat=()=>DB.doc("presence/"+ME).set({t:Date.now()}).catch(()=>{});beat();setInterval(beat,20000);
-  DB.collection("presence").limit(300).onSnapshot(s=>{PR=s.docs.map(x=>({id:x.id,t:+x.data().t||0}));countOnl()},()=>{});
+  DB.collection("presence").limit(300).onSnapshot(s=>{PR=s.docs.map(x=>({id:x.id,t:+x.data().t||0}));countOnl()},e=>onlFail(e&&e.code));
   setInterval(countOnl,10000);addEventListener("pagehide",()=>{try{DB.doc("presence/"+ME).delete()}catch(e){}})}
+
+let ONLERR="";
+const OFFMSG="Подключаемся к онлайну… подожди несколько секунд.";
+function onlFail(c){ONLERR=String(c||"error");onlR();if(tab==="mp")render()}
+function onlMsg(){if(!ONLERR)return OFFMSG;const m={"auth/operation-not-allowed":"Включи Anonymous: Firebase → Authentication → Sign-in method","auth/admin-restricted-operation":"Включи Anonymous: Firebase → Authentication → Sign-in method","auth/unauthorized-domain":"Добавь домен сайта: Firebase → Authentication → Settings → Authorized domains","permission-denied":"Проверь правила: Firebase → Firestore Database → Rules","failed-precondition":"Создай базу: Firebase → Firestore Database → Create database","not-found":"Создай базу: Firebase → Firestore Database → Create database","unavailable":"Нет связи с Firebase. Проверь интернет или отключи блокировщик рекламы","auth/network-request-failed":"Нет связи с Firebase. Проверь интернет или отключи блокировщик рекламы","timeout":"Не удалось загрузить Firebase. Проверь интернет или отключи блокировщик рекламы и обнови страницу"};return "Онлайн не подключился. "+(m[ONLERR]||"")+"<br><small>Код: "+esc(ONLERR)+"</small>"}
+const PROMO={NEONDROP:{c:500},GREEN1000:{c:1000},WELCOME:{c:750},LUCKY777:{c:777},DROPZONE:{c:1500},FREECASE:{c:300},NIGHTMODE:{c:2500},BIGWIN:{c:10000},JACKPOT5:{c:5000},STREAMER:{c:25000},UPGRADE:{c:2000},MYSTERY:{c:3000},SKINRAIN:{k:"any",max:2000},KNIFEUP:{k:"knife",max:5000},GLOVEUP:{k:"glove",max:5000}};
+async function usePromo(){const el=document.getElementById("pcode"),code=((el&&el.value)||"").trim().toUpperCase().replace(/\s+/g,""),pr=PROMO[code];
+  if(!code){toast("Введи промокод");return}if(!pr){toast("Такого промокода нет");return}
+  st.pm=st.pm||[];if(st.pm.includes(code)){toast("Ты уже активировал этот промокод");return}
+  if(DB&&ME){try{const r=DB.doc("promos/"+ME),sn=await r.get(),used=sn.exists?(sn.data().codes||[]):[];if(used.includes(code)){st.pm.push(code);save();toast("Ты уже активировал этот промокод");return}used.push(code);await r.set({codes:used,t:Date.now()})}catch(e){}}
+  st.pm.push(code);let msg;
+  if(pr.c){st.bal+=pr.c;msg="+ ◈ "+fmt(pr.c)}
+  else{const pool=RK.filter(s=>s.p>=50&&s.p<=pr.max&&(pr.k==="knife"?KN(s):pr.k==="glove"?GL(s):true)),w=pool[Math.floor(Math.random()*pool.length)];st.inv.push({uid:st.uid++,id:w.id,s:[]});msg="Скин: "+w.n}
+  save();render();bump();toast("Промокод принят! "+msg)}
 render();
 mpInit();
 onlR();feedRender();
+</script>
+<script>setTimeout(function(){if(!window.__ghok&&window.onlFail)onlFail("timeout")},12000)</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,doc,addDoc,getDoc,updateDoc,deleteDoc,onSnapshot,query,limit,orderBy,setDoc,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+try{
+  const app=initializeApp({apiKey:"AIzaSyBcqnbPQRlWz7YcmGYEkuk9RFsPSC4LatM",authDomain:"neon-drop-49ce4.firebaseapp.com",projectId:"neon-drop-49ce4",storageBucket:"neon-drop-49ce4.firebasestorage.app",messagingSenderId:"848555797182",appId:"1:848555797182:web:e0ae4d2d25d9ac7bf50cef"});
+  const fs=getFirestore(app);
+  const uid=(await signInAnonymously(getAuth(app))).user.uid;
+  window.__ghok=1;
+  const sd=d=>({id:d.id,exists:d.exists(),data:()=>d.data()});
+  const snap=(q,cb,er)=>onSnapshot(q,s=>cb({docs:s.docs.map(sd)}),er);
+  const DBx={
+    collection:name=>({
+      limit:n=>({onSnapshot:(cb,er)=>snap(query(collection(fs,name),limit(n)),cb,er)}),
+      orderBy:(f,dr)=>({limit:n=>({onSnapshot:(cb,er)=>snap(query(collection(fs,name),orderBy(f,dr),limit(n)),cb,er)})}),
+      add:d=>addDoc(collection(fs,name),d)}),
+    doc:path=>{const r=doc(fs,path);return{
+      get:async()=>sd(await getDoc(r)),
+      set:d=>setDoc(r,d),
+      update:d=>updateDoc(r,d),
+      delete:()=>deleteDoc(r),
+      acquire:async o=>({acquired:await runTransaction(fs,async tx=>{const s=await tx.get(r),d=s.exists()?s.data():{};if(d.lockUntil>Date.now()&&d.lockBy!==o.holder)return false;if(s.exists())tx.update(r,{lockBy:o.holder,lockUntil:Date.now()+(o.ttlMs||5000)});return true})})}}};
+  window.claude={use:async k=>k==="user"?{id:async()=>uid}:k==="db"?DBx:null};
+  if(window.mpInit)window.mpInit();
+}catch(e){console.warn("Онлайн недоступен:",e);window.__ghok=1;if(window.onlFail)window.onlFail(e&&(e.code||e.message))}
 </script>
 </body>
 </html>
